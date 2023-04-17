@@ -1,146 +1,189 @@
-import "./CSS/App.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import './CSS/App.css';
 
 function App() {
-  const [conteudo, setConteudo] = useState(<></>);
-  // o setBusca e setConteudo são funções que dão valor para as variáveis, o useState é uma função que cria variáveis. 
-  //O conteudo é a variável que vai receber o valor da função setConteudo, e o busca é a variável que vai receber o valor da função setBusca
-  const [busca, setBusca] = useState("");
+  const [ conteudo, setConteudo ] = useState(<></>)
+  const [ busca, setBusca ] = useState('');
+
+  function getGenero(genero) {
+    switch (genero) {
+      case 'Male':
+        return 'Masculino'
+      case 'Female':
+        return 'Feminino'
+      case 'unknown':
+        return 'Desconhecido'
+      case 'Genderless':
+        return 'Sem Gênero'
+      default:
+        return genero
+    }
+  }
 
   function getStatus(status) {
     switch (status) {
-      case "Alive":
-        return "Vivo";
-      case "Dead":
-        return "Morto";
-      case "unknown":
-        return "desconhecido";
-    }
-  }
-
-  function getGender(gender) {
-    switch (gender) {
-      case "Male":
-        return "Masculino";
-      case "Female":
-        return "Feminino";
-      case "unknown":
-        return "desconhecido";
-    }
-  }
-
-  function getSpecies(species) {
-    switch (species) {
-      case "Human":
-        return "Humano";
+      case 'Alive':
+        return 'Vivo'
+      case 'Dead':
+        return 'Morto'
+      case 'unknown':
+        return 'Desconhecido'
       default:
-        return "Desconhecido";
+        return status
     }
   }
-  
-  async function carragarTodosOsPersonagens() {
-  var requestOptions = {
-    method: "GET",
-    redirect: "follow",
-  };
 
-    const results = await fetch(
+  function getEspecie(especie) {
+    switch (especie) {
+      case 'Alien':
+        return 'Alienígena'
+      case 'Human':
+        return 'Humano'
+      case 'Robot':
+        return 'Robo'
+      case 'Disease':
+        return 'Doença'
+      case 'Humanoid':
+        return 'Humanoide'
+      case 'unknown':
+        return 'Desconhecido'
+      case 'Mythological Creature':
+        return 'Criatura Mitológica'
+      default:
+        return especie
+    }
+  }
+
+  async function carregarTodosPersonagens() {
+    var requestOptions = {
+      method: 'GET',
+      redirect: 'follow'
+    };
+    
+    const result = await fetch(
       "https://rickandmortyapi.com/api/character"+busca,
       requestOptions
     )
       .then(response => response.text())
-      .then(result => { return result; })
-      .catch(error => console.log("error", error));
+      .then(result => { return result })
+      .catch(error => console.log('error', error));
 
-      const char = JSON.parse(results)
-    
+    const char = JSON.parse(result)
+
     return char.results
   }
 
-  async function listaPersonagem() {
-    const todosPersonagens = await carragarTodosOsPersonagens();
+  async function listaPersonagens() {
+    const todosPersonagens = await carregarTodosPersonagens()
 
-    return todosPersonagens.map((personagem) => (
-      <div className="card">
-        <img src={personagem.image} alt={personagem.nome} />
-        <div className="cardname">
-          {personagem.name}
+    return todosPersonagens.map(personagem =>
+      <div className='card char' key={personagem.id}>
+        <img src={personagem.image} alt={personagem.name}/>
+
+        <h2>{personagem.name}</h2>
+
+        <div className='char-info'>
+          <span><b>Espécie: </b>{getEspecie(personagem.species)}</span>
+          <span><b>Gênero: </b>{getGenero(personagem.gender)}</span>
         </div>
-        <div className="cardspecies">
-          <h3>Espécie: {getSpecies(personagem.species)}</h3>
-        </div>
-        <div className="cardgender">
-          <h3>Gênero: {getGender(personagem.gender)}</h3>
-        </div>
-        <div className='cardepisode'>
-	        <h5>Participações: {personagem.episode.map(ep => (
-		        <span key={(personagem.name+(ep.split('episode/')[1]))}>Ep {ep.split('episode/')[1]},</span>))}
-	        </h5>
-        </div>
-        <div className="cardstatus">
-          <h3>Estado: {getStatus(personagem.status)}</h3>
+
+        <div>
+          <div className='lista-secundaria'>
+            <b>Participações:</b>
+            { personagem.episode.map(
+              ep => 
+                  <span key={personagem.name+(ep.split('episode/'))[1]}>
+                    Ep-{ (ep.split('episode/'))[1] }
+                  </span>
+            ) }
+          </div>
+          <h5><b>Status: </b> {getStatus(personagem.status)}</h5>
         </div>
       </div>
-    ));
+    )
   }
 
-  function montarFiltro(tipo, valor) {
-    const filtros = new URLSearchParams();
-    /* 
-    * filtros = {
-    }
-    */
+  function montarFiltro(type, value){
+    const filtros = new URLSearchParams(busca)
+    const filtro = filtros.get(type)
 
-    const batata = filtros.get(tipo)
-    if (batata === valor){
-      filtros.delete(tipo)
-    } else{
-      filtros.set(tipo, valor)
+    if(filtro === value){
+      filtros.delete(type)
+    } else {
+      filtros.set(type, value)
     }
-
-    filtros.set(tipo, valor)
-    /* 
-    * filtros = {
-    *   status: 'alive'
-    }
-    */
 
     setBusca('?'+filtros.toString())
   }
 
+  function marcarFiltro(type, value){
+    const filtros = new URLSearchParams(busca)
+    const filtro = filtros.get(type)
 
+    if(filtro === value){
+      return 'filtro-ativo'
+    }
+    return ''
+  }
 
   useEffect(() => {
-    async function getConteudo(){
-      setConteudo(await listaPersonagem());
+    async function getConteudo() {
+      setConteudo(await listaPersonagens())
     }
-    getConteudo();
-  }, [busca]);
+    getConteudo()
+  }, [busca])
 
   return (
     <div className="App">
-      <header className="App-header">
+      <header className="cabecalho">
         <h1>Rick and Morty API</h1>
-        <h2><a href="/">Personagens</a></h2>
+        <h2><a href='/'>Personagens</a></h2>
       </header>
-      
-      <div className="filtros">
-        <span className="titulo-filtros">Filtros</span>
-        <div className="filtro status">
+      <div className='filtros'>
+        <span className='filtros-titulo'>Filtros</span>
+        <div className='filtro status'>
           <b>Status:</b>
-          <span onClick={() => montarFiltro('status', 'alive')}>Vivo</span>
-          <span onClick={() => setBusca('?status=dead')}>Morto</span>
-          <span onClick={() => setBusca('?status=unknown')}>Desconhecido</span>
+          <span
+            className={marcarFiltro('status', 'live')}
+            onClick={() => montarFiltro('status', 'live')}
+          >
+            Vivo
+          </span>
+          <span
+            className={marcarFiltro('status', 'dead')}
+            onClick={() => montarFiltro('status', 'dead')}>
+            Morto
+          </span>
+          <span
+            className={marcarFiltro('status', 'unknown')}
+            onClick={() => montarFiltro('status', 'unknown')}
+          >
+            Desconhecido
+          </span>
         </div>
-        <div className="filtro genero">
-          <b>Gênero:</b>
-          <span onClick={() => setBusca('?gender=male')}>Masculino</span>
-          <span onClick={() => setBusca('?gender=female')}>Feminino</span>
-          <span onClick={() => setBusca('?gender=genderless')}>Sem gênero</span>
-          <span onClick={() => setBusca('?gender=unknown')}>Desconhecido</span>
+        <div className='filtro genero'>
+          <b>Gênero:</b> 
+          <span
+            className={marcarFiltro('gender', 'female')}
+            onClick={() => montarFiltro('gender', 'female')}>Feminino
+          </span>
+          <span
+            className={marcarFiltro('gender', 'male')}
+            onClick={() => montarFiltro('gender', 'male')}>Masculino
+          </span>
+          <span
+            className={marcarFiltro('gender', 'genderless')}
+            onClick={() => montarFiltro('gender', 'genderless')}>Sem gênero
+          </span>
+          <span
+            className={marcarFiltro('gender', 'unknown')}
+            onClick={() => montarFiltro('gender', 'unknown')}>Desconhecido
+          </span>
         </div>
       </div>
-      <div className="lista-principal">{conteudo}</div>
+      <div className='lista-principal'>
+        { conteudo }
+      </div>
     </div>
   );
 }
